@@ -1,0 +1,57 @@
+<form version="1.1">
+  <label>Threat Object - SOAR</label>
+  <fieldset submitButton="false">
+    <input type="text" token="input_risk_object">
+      <label>Risk Object</label>
+    </input>
+    <input type="dropdown" token="input_threat_object_type">
+      <label>Threat Object Type</label>
+      <fieldForLabel>threat_object_type</fieldForLabel>
+      <fieldForValue>threat_object_type</fieldForValue>
+      <search>
+        <query>index=risk risk_object="$input_risk_object$"
+| eval threat_object_and_type=mvzip(threat_object_type, threat_object, "=")
+| table source, risk_object, threat_object_and_type, threat_object_type, threat_object
+| fields threat_object_type
+| mvexpand threat_object_type
+| dedup threat_object_type
+| sort threat_object_type</query>
+        <earliest>-90d@d</earliest>
+        <latest>now</latest>
+      </search>
+      <choice value="*">All</choice>
+      <default>*</default>
+    </input>
+    <input type="time" token="input_timeframe">
+      <label></label>
+      <default>
+        <earliest>-24h@h</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <title>Indicators of Behavior (IOBs)</title>
+      <table>
+        <search>
+          <query>index=risk risk_object="$input_risk_object$"
+| eval threat_object_and_type=mvzip(threat_object_type, threat_object, "=")
+| table source, risk_object, threat_object_and_type, threat_object_type, threat_object
+| mvexpand threat_object_and_type
+```| stats count, values(source) as detections, values(threat_object_and_type) as threat_object_and_type by risk_object```
+| fields threat_object_and_type
+| where threat_object_and_type!=""
+| dedup threat_object_and_type
+| sort threat_object_and_type
+| search threat_object_and_type="$input_threat_object_type$*"
+| rename threat_object_and_type AS IOBs</query>
+          <earliest>$input_timeframe.earliest$</earliest>
+          <latest>$input_timeframe.latest$</latest>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </table>
+    </panel>
+  </row>
+</form>

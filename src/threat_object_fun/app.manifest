@@ -1,0 +1,57 @@
+{
+  "schemaVersion": "2.0.0", 
+  "info": {
+    "title": "Threat Object Fun", 
+    "id": {
+      "group": null, 
+      "name": "threat_object_fun", 
+      "version": "1.0.0"
+    }, 
+    "author": [
+      {
+        "name": "Haylee Mills, Stuart McIntosh", 
+        "email": null, 
+        "company": "Outpost Security"
+      }
+    ], 
+    "releaseDate": null, 
+    "description": "An illustrative app for working with Threat Objects.", 
+    "classification": {
+      "intendedAudience": null, 
+      "categories": [], 
+      "developmentStatus": null
+    }, 
+    "commonInformationModels": null, 
+    "license": {
+      "name": null, 
+      "text": null, 
+      "uri": null
+    }, 
+    "privacyPolicy": {
+      "name": null, 
+      "text": null, 
+      "uri": null
+    }, 
+    "releaseNotes": {
+      "name": null, 
+      "text": null, 
+      "uri": null
+    }
+  }, 
+  "dependencies": {
+        "SplunkEnterpriseSecuritySuite": {
+            "version": ">=6.6.0",
+            "optional": false
+        }
+    }, 
+  "tasks": null, 
+  "inputGroups": null, 
+  "incompatibleApps": null, 
+  "platformRequirements": null, 
+  "supportedDeployments": [
+    "_standalone", 
+    "_distributed"
+  ], 
+  "targetWorkloads": ["_search_heads"]
+}
+

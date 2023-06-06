@@ -1,0 +1,119 @@
+<form version="1.1">
+  <label>Threat Object Overview</label>
+  <fieldset submitButton="false">
+    <input type="time" token="input_timerange">
+      <label></label>
+      <default>
+        <earliest>-7d@h</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <title>Threat Object Types Found</title>
+      <chart>
+        <search>
+          <query>| tstats `summariesonly` count
+    from datamodel=Risk.All_Risk 
+    where (All_Risk.threat_object_type!="unknown" All_Risk.threat_object_type!="")
+    by All_Risk.threat_object_type
+| `drop_dm_object_name("All_Risk")`</query>
+          <earliest>$input_timerange.earliest$</earliest>
+          <latest>$input_timerange.latest$</latest>
+        </search>
+        <option name="charting.chart">pie</option>
+        <option name="charting.drilldown">none</option>
+      </chart>
+    </panel>
+    <panel>
+      <title>Threat Object Types Found - Over Time</title>
+      <chart>
+        <search>
+          <query>| tstats `summariesonly` count
+    from datamodel=Risk.All_Risk 
+    where (All_Risk.threat_object_type!="unknown" All_Risk.threat_object_type!="")
+    by _time All_Risk.threat_object_type
+| `drop_dm_object_name("All_Risk")`
+| chart bins=75 sum(count) as count over _time by threat_object_type</query>
+          <earliest>$input_timerange.earliest$</earliest>
+          <latest>$input_timerange.latest$</latest>
+        </search>
+        <option name="charting.chart">area</option>
+        <option name="charting.chart.nullValueMode">zero</option>
+        <option name="charting.chart.stackMode">stacked</option>
+        <option name="charting.drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Threat Objects - Top 10</title>
+      <table>
+        <search>
+          <query>| tstats `summariesonly` count as total,
+    dc(All_Risk.risk_object) as distinct_risk_objects,
+    values(source) as detections
+    from datamodel=Risk.All_Risk 
+    where (All_Risk.threat_object_type!="unknown" All_Risk.threat_object_type!="")
+    by All_Risk.threat_object 
+| `drop_dm_object_name("All_Risk")`
+| sort 10 - total
+| eval threat_object=if(len(threat_object)&lt;50, threat_object, substr(threat_object,1,50)."...")</query>
+          <earliest>$input_timerange.earliest$</earliest>
+          <latest>$input_timerange.latest$</latest>
+        </search>
+        <option name="drilldown">none</option>
+      </table>
+    </panel>
+    <panel>
+      <title>Threat Objects - Rarest 10</title>
+      <table>
+        <search>
+          <query>| tstats `summariesonly` count as total,
+    dc(All_Risk.risk_object) as distinct_risk_objects,
+    values(source) as detections
+    from datamodel=Risk.All_Risk 
+    where (All_Risk.threat_object_type!="unknown" All_Risk.threat_object_type!="")
+    by All_Risk.threat_object 
+| `drop_dm_object_name("All_Risk")`
+| sort 10 total
+| eval threat_object=if(len(threat_object)&lt;50, threat_object, substr(threat_object,1,50)."...")</query>
+          <earliest>$input_timerange.earliest$</earliest>
+          <latest>$input_timerange.latest$</latest>
+        </search>
+        <option name="drilldown">none</option>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Non-File Threat Objects Related To File Threat Objects</title>
+      <table>
+        <search>
+          <query>| tstats `summariesonly` count, values(source) as detections, values(All_Risk.threat_object_type) as threat_object_type, dc(All_Risk.threat_object_type) as threat_object_type_count
+    from datamodel=Risk.All_Risk 
+    where (All_Risk.threat_object_type!="unknown" All_Risk.threat_object_type!="" All_Risk.threat_object_type!=file_name) ( 
+    [| tstats `summariesonly` count, values(source) as detections
+        from datamodel=Risk.All_Risk 
+        where (All_Risk.threat_object_type!="unknown" All_Risk.threat_object_type!="" All_Risk.threat_object_type=file_name)
+        by All_Risk.threat_object, All_Risk.threat_object_type 
+    | `drop_dm_object_name("All_Risk")` 
+    | fields threat_object 
+    | eval threat_object="*".mvindex(split(threat_object,"\\"), mvcount(split(threat_object,"\\"))-1)."*" 
+    | rename threat_object AS "All_Risk.threat_object"])
+    by All_Risk.threat_object 
+| `drop_dm_object_name("All_Risk")`
+| sort - threat_object_type_count</query>
+          <earliest>$input_timerange.earliest$</earliest>
+          <latest>$input_timerange.latest$</latest>
+        </search>
+        <option name="drilldown">row</option>
+        <drilldown>
+          <link target="_blank">/app/threat_object_fun/threat_object_detail?form.input_threat_object=$row.threat_object$</link>
+        </drilldown>
+      </table>
+    </panel>
+  </row>
+</form>

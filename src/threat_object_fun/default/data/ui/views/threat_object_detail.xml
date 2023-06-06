@@ -1,0 +1,77 @@
+<form version="1.1">
+  <label>Threat Object Detail</label>
+  <fieldset submitButton="true" autoRun="false">
+    <input type="text" token="input_threat_object">
+      <label>Threat Object</label>
+    </input>
+    <input type="time" token="input_timerange">
+      <label></label>
+      <default>
+        <earliest>-7d@h</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <title>Occurrence Count by Day - Last 90 Days</title>
+      <chart>
+        <search>
+          <query>| tstats `summariesonly` count
+    from datamodel=Risk.All_Risk 
+    where (All_Risk.threat_object_type!="unknown" All_Risk.threat_object_type!="" All_Risk.threat_object=$input_threat_object|s$)
+    by All_Risk.threat_object, _time
+| `drop_dm_object_name("All_Risk")`
+| search threat_object=$input_threat_object|s$
+| timechart span=1d sum(count) as count BY threat_object</query>
+          <earliest>-90d@d</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="charting.chart">area</option>
+        <option name="charting.chart.nullValueMode">zero</option>
+        <option name="charting.chart.stackMode">stacked</option>
+        <option name="charting.drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Threat Object Details</title>
+      <table>
+        <search>
+          <query>| tstats `summariesonly` count, values(source) as detections
+    from datamodel=Risk.All_Risk 
+    where (All_Risk.threat_object_type!="unknown" All_Risk.threat_object_type!="" All_Risk.threat_object=$input_threat_object|s$)
+    by All_Risk.threat_object, All_Risk.threat_object_type
+| `drop_dm_object_name("All_Risk")`
+| search threat_object=$input_threat_object|s$</query>
+          <earliest>$input_timerange.earliest$</earliest>
+          <latest>$input_timerange.latest$</latest>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </table>
+    </panel>
+    <panel>
+      <title>Risk Objects</title>
+      <table>
+        <search>
+          <query>| tstats `summariesonly` count, values(source) as detections
+    from datamodel=Risk.All_Risk 
+    where (All_Risk.threat_object_type!="unknown" All_Risk.threat_object_type!="" All_Risk.threat_object=$input_threat_object|s$)
+    by All_Risk.threat_object, All_Risk.threat_object_type, All_Risk.risk_object, All_Risk.risk_object_type
+| `drop_dm_object_name("All_Risk")`
+| search threat_object=$input_threat_object|s$
+| fields - threat_object, threat_object_type
+| dedup risk_object, risk_object_type, detections
+| sort - count</query>
+          <earliest>$input_timerange.earliest$</earliest>
+          <latest>$input_timerange.latest$</latest>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+      </table>
+    </panel>
+  </row>
+</form>

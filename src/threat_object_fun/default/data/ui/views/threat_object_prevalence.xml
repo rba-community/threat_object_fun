@@ -1,0 +1,450 @@
+<form version="1.1">
+  <init>
+    <unset token="event_click"></unset>
+    <unset token="search_values"></unset>
+    <unset token="search-values2"></unset>
+    <unset token="risk_drilldown"></unset>
+  </init>
+  <search id="threat_object_sources">
+    <query>
+      | tstats summariesonly=true count dc(All_Risk.risk_object) as dc_r_obj dc(All_Risk.threat_object) as dc_t_obj dc(All_Risk.src) as dc_src dc(All_Risk.dest) as dc_dest dc(All_Risk.user) as dc_users dc(All_Risk.user_bunit) as dc_bunit sum(All_Risk.calculated_risk_score) as risk_sum values(All_Risk.calculated_risk_score) as scores values(All_Risk.risk_object) as risk_object values(All_Risk.src) as src values(All_Risk.dest) as dest values(All_Risk.user) as user values(All_Risk.user_bunit) as bunit from datamodel=Risk.All_Risk where All_Risk.threat_object IN ("$threat_token$") by All_Risk.threat_object,All_Risk.threat_object_type,source | `drop_dm_object_name("All_Risk")` 
+    </query>
+    <earliest>$time_picker.earliest$</earliest>
+    <latest>$time_picker.latest$</latest>
+  </search>
+  <label>Threat Object Prevalence</label>
+  <!-- Following panel is mirrored twice, just once search is when the drilldown is risk_object-->
+  <fieldset autoRun="true" submitButton="true">
+    <input type="text" token="threat_object" searchWhenChanged="true">
+      <label>threat_object</label>
+      <change>
+        <eval token="threat_token">replace(replace(replace($threat_object$,"\\\\","\\\\\\"),"\"","\\\""),"\\|","\\\|")</eval>
+        <eval token="threat_token">replace($threat_token$,"&amp;&amp;","\",\"")</eval>
+      </change>
+      <default>*</default>
+      <initialValue>*</initialValue>
+    </input>
+    <input type="time" token="time_picker">
+      <label></label>
+      <default>
+        <earliest>-7d@d</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+  </fieldset>
+  
+  <row>
+    <panel>
+      <html>
+      Search for multiple threat objects at the same time by joining them with "&amp;&amp;" in the input field.
+    </html>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Past 30 Days</title>
+      <single>
+        <title>Number of Events</title>
+        <search>
+          <query>| makeresults | eval num_objects = if(isint($num_objects$),"$num_objects$",0) | table num_objects
+          </query>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">none</option>
+        <option name="drilldown">all</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0xd41f1f","0xcba700","0x53a051"]</option>
+        <option name="rangeValues">[10,50]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="showSparkline">0</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="unitPosition">after</option>
+        <option name="useColors">1</option>
+        <option name="useThousandSeparators">1</option>
+        <option name="underLabel">click for samples</option>        
+        <drilldown>
+          <set token="event_click">true</set>
+        </drilldown>
+      </single>
+      <single>
+        <title>Risk Rule Sources</title>
+        <search>
+          <query>| makeresults | eval source_count = if(isint($source_count$),"$source_count$",0) | table source_count</query>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">none</option>
+        <option name="drilldown">all</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0xd41f1f","0xcba700","0x53a051"]</option>
+        <option name="rangeValues">[1,3]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="showSparkline">0</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="unitPosition">after</option>
+        <option name="useColors">1</option>
+        <option name="useThousandSeparators">1</option>
+        <drilldown>
+          <unset token="nothing"></unset>
+        </drilldown>
+      </single>
+      <single>
+        <title>Risk Objects</title>
+        <search>
+          <query>| makeresults 
+| eval risk_objects = if(isint($ro_count$),"$ro_count$",0)
+| table risk_objects</query>
+          <earliest>$earliest$</earliest>
+          <latest>$latest$</latest>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">none</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0xd41f1f","0xcba700","0x53a051"]</option>
+        <option name="rangeValues">[3,10]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="showSparkline">0</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="unitPosition">after</option>
+        <option name="useColors">1</option>
+        <option name="useThousandSeparators">1</option>
+      </single>
+      <single>
+        <title>Related Threat Objects</title>
+        <search>
+          <query>| makeresults | eval related_count = if(isint($related_count$),"$related_count$",0) | table related_count</query>
+        </search>
+        <option name="colorBy">value</option>
+        <option name="colorMode">none</option>
+        <option name="numberPrecision">0</option>
+        <option name="rangeColors">["0xd41f1f","0xcba700","0x53a051"]</option>
+        <option name="rangeValues">[5,25]</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="showSparkline">0</option>
+        <option name="trendColorInterpretation">standard</option>
+        <option name="unitPosition">after</option>
+        <option name="useColors">1</option>
+        <option name="useThousandSeparators">1</option>
+      </single>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <table depends="$event_click$">
+        <title>Risk Messages in Past 30 Days</title>
+        <search id="threat_breakdown">
+          <query>
+          | tstats summariesonly=t count values(All_Risk.risk_message) as risk_message sum(All_Risk.calculated_risk_score) as risk_score values(source) as sources dc(All_Risk.threat_object) as dc_t_obj values(All_Risk.threat_object_type) as t_types values(All_Risk.threat_object) as threat_object values(All_Risk.risk_object_type) as risk_object_type from datamodel=Risk.All_Risk where All_Risk.threat_object IN ("$threat_token$") groupby All_Risk.risk_object All_Risk.calculated_risk_score source _time span=30d | `drop_dm_object_name("All_Risk")` | table * | dedup risk_message | eval risk_message="-----=== ".source." ===-----||"."===== THREAT OBJECTS ====||".mvjoin(threat_object,"||")."||===== RISK MESSAGES =====||".mvjoin(risk_message,"||")."|| ||" | rex mode=sed field=risk_message "s/\|\|/\n/g" | stats sum(count) as events sum(dc_t_obj) as dc_t_obj values(t_types) as t_types sum(risk_score) as risk_score values(sources) as sources values(risk_message) as risk_message by risk_object | eventstats dc(risk_object) as ro_count dc(sources) as source_count sum(events) as num_objects
+          </query>
+          <earliest>-30d</earliest>
+          <latest></latest>
+          <sampleRatio>1</sampleRatio>
+          <progress>
+            <set token="ro_count">$result.ro_count$</set>
+            <set token="source_count">$result.source_count$</set>
+            <set token="num_objects">$result.num_objects$</set>
+          </progress>
+        </search>
+        <option name="count">20</option>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">cell</option>
+        <option name="percentagesRow">false</option>
+        <option name="rowNumbers">false</option>
+        <option name="totalsRow">false</option>
+        <option name="wrap">true</option>
+        <format type="color" field="risk_object">
+          <colorPalette type="list">[#a7c4f2]</colorPalette>
+        </format>
+        <fields>["risk_object","count","dc_t_obj","t_types","risk_message"]</fields>
+        <drilldown>
+          <condition match="match('click.name2', &quot;risk_object&quot;)">
+            <link target="_blank">/app/threat_object_fun/risk_investigation_dashboard?form.field_rv=$click.value2$&amp;form.timepicker.earliest=-30d&amp;form.timepicker.latest=now</link>
+          </condition>
+          <condition>
+            <unset token="event_click"></unset>
+          </condition>
+        </drilldown>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel depends="$search_values$">
+      <table>
+        <search>
+          <query>
+            | tstats summariesonly=true count sum(All_Risk.calculated_risk_score) as risk_sum values(All_Risk.calculated_risk_score) as scores values(All_Risk.threat_object_type) as threat_object_type from datamodel=Risk.All_Risk where All_Risk.$search_values$ IN ("$values_search$") by All_Risk.$search_values$,All_Risk.risk_object,source,All_Risk.threat_object | `drop_dm_object_name("All_Risk")` | eval threat_object_type=mvjoin(threat_object_type,"+") , threat_object_full=threat_object , threat_object=if(len(threat_object)&lt;90, threat_object, substr(threat_object,1,90)."...") , threat_object=threat_object_type.":  ".threat_object | stats values(threat_object) as threat_object values(threat_object_full) as threat_object_full sum(count) as count sum(risk_sum) as risk_sum by $search_values$,risk_object,source | eval threat_object="--= ".source." =--||".mvjoin(threat_object,"||") | rex mode=sed field=threat_object "s/\|\|/\n/g" | stats values(threat_object) as threat_object sum(count) as count sum(risk_sum) as risk_sum values(threat_object_full) as threat_object_full by $search_values$,risk_object  | eval threat_object_full=mvjoin(threat_object_full,"&amp;&amp;")
+          </query>
+        </search>
+        <fields>$search_values$,risk_object,threat_object,count,risk_sum</fields>
+        <drilldown>
+          <condition match="match('click.name2', &quot;risk_object&quot;)">
+            <link target="_blank">/app/threat_object_fun/risk_investigation_dashboard?form.field_rv=$click.value2$&amp;form.timepicker.earliest=-7d&amp;form.timepicker.latest=now</link>
+          </condition>
+          <condition match="match('click.name2', &quot;threat_object&quot;)">
+            <set token="threat_object_full">$row.threat_object_full$</set>
+            <link target="_blank">/app/threat_object_fun/threat_object_prevalence?form.threat_object=$threat_object_full$&amp;form.time_picker.earliest=-7d&amp;form.time_picker.latest=now</link>
+          </condition>
+          <condition>
+            <unset token="search_values"></unset>
+          </condition>
+        </drilldown>
+        <format type="color" field="risk_object">
+          <colorPalette type="list">[#a7c4f2]</colorPalette>
+        </format>
+        <format type="color" field="threat_object">
+          <colorPalette type="list">[#a7e4f2]</colorPalette>
+        </format>
+      </table>
+    </panel>
+    <panel depends="$search_values2$">
+      <table>
+        <search>
+          <query>
+            | tstats summariesonly=true count sum(All_Risk.calculated_risk_score) as risk_sum values(All_Risk.calculated_risk_score) as scores values(All_Risk.threat_object_type) as threat_object_type from datamodel=Risk.All_Risk where All_Risk.risk_object IN ("$values_search$") by All_Risk.risk_object,source,All_Risk.threat_object | `drop_dm_object_name("All_Risk")` | eval threat_object_type=mvjoin(threat_object_type,"+") , threat_object_full=threat_object , threat_object=if(len(threat_object)&lt;90, threat_object, substr(threat_object,1,90)."...") , threat_object=threat_object_type.":  ".threat_object | stats values(threat_object) as threat_object values(threat_object_full) as threat_object_full sum(count) as count sum(risk_sum) as risk_sum by risk_object,source | eval threat_object="--= ".source." =--||".mvjoin(threat_object,"||") | rex mode=sed field=threat_object "s/\|\|/\n/g" | stats values(threat_object) as threat_object sum(count) as count sum(risk_sum) as risk_sum values(threat_object_full) as threat_object_full by risk_object  | eval threat_object_full=mvjoin(threat_object_full,"&amp;&amp;")
+          </query>
+        </search>
+        <fields>risk_object,threat_object,count,risk_sum</fields>
+        <drilldown>
+          <condition match="match('click.name2', &quot;risk_object&quot;)">
+            <link target="_blank">/app/threat_object_fun/risk_investigation_dashboard?form.field_rv=$click.value2$&amp;form.timepicker.earliest=-7d&amp;form.timepicker.latest=now</link>
+          </condition>
+          <condition match="match('click.name2', &quot;threat_object&quot;)">
+            <set token="threat_object_full">$row.threat_object_full$</set>
+            <link target="_blank">/app/threat_object_fun/threat_object_prevalence?form.threat_object=$threat_object_full$&amp;form.time_picker.earliest=-7d&amp;form.time_picker.latest=now</link>
+          </condition>
+          <condition>
+            <unset token="search_values2"></unset>
+          </condition>
+        </drilldown>
+        <format type="color" field="risk_object">
+          <colorPalette type="list">[#a7c4f2]</colorPalette>
+        </format>
+        <format type="color" field="threat_object">
+          <colorPalette type="list">[#a7c4f2]</colorPalette>
+        </format>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel depends="$threat_token$">
+      <table>
+        <title>Prevalence by Source</title>
+        <search base="threat_object_sources">
+          <query>| search threat_object IN ("$threat_token$") | sort 1000 + count | eval threat_object_full=threat_object | eval type=threat_object_type | eval threat_object=if(len(threat_object)&lt;50, threat_object, substr(threat_object,1,50)."...")</query>
+        </search>
+        <fields>threat_object type source count dc_r_obj dc_t_obj dc_src dc_dest dc_users dc_bunit risk_sum scores</fields>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">cell</option>
+        <option name="refresh.display">progressbar</option>
+        <format type="color" field="dc_r_obj">
+          <colorPalette type="list">[#a7c4f2]</colorPalette>
+        </format>
+        <format type="color" field="dc_t_obj">
+          <colorPalette type="list">[#a7c4f2]</colorPalette>
+        </format>
+        <format type="color" field="threat_object">
+          <colorPalette type="list">[#a7c4f2]</colorPalette>
+        </format>
+        <format type="color" field="dc_src">
+          <colorPalette type="list">[#a7c4f2]</colorPalette>
+        </format>
+        <format type="color" field="dc_dest">
+          <colorPalette type="list">[#a7c4f2]</colorPalette>
+        </format>
+        <format type="color" field="dc_users">
+          <colorPalette type="list">[#a7c4f2]</colorPalette>
+        </format>
+        <format type="color" field="dc_bunit">
+          <colorPalette type="list">[#a7c4f2]</colorPalette>
+        </format>
+        <drilldown>
+          <condition match="match('click.name2', &quot;dc_r_obj&quot;)">
+            <unset token="search_values"></unset>
+            <set token="search_values2">risk_object</set>
+            <set token="risk_values">$row.risk_object$</set>
+            <eval token="risk_values">replace(replace($risk_values$,"\\\\","\\\\\\"),"\"","\\\"")</eval>
+            <eval token="values_search">replace($risk_values$,",","\",\"")</eval>
+          </condition>
+          <condition match="match('click.name2', &quot;dc_src&quot;)">
+            <unset token="search_values2"></unset>
+            <set token="search_values">src</set>
+            <set token="src_values">$row.src$</set>
+            <eval token="src_values">replace(replace($src_values$,"\\\\","\\\\\\"),"\"","\\\"")</eval>
+            <eval token="values_search">replace($src_values$,",","\",\"")</eval>
+          </condition>
+          <condition match="match('click.name2', &quot;dc_dest&quot;)">
+            <unset token="search_values2"></unset>
+            <set token="search_values">dest</set>
+            <set token="dest_values">$row.dest$</set>
+            <eval token="dest_values">replace(replace($dest_values$,"\\\\","\\\\\\"),"\"","\\\"")</eval>
+            <eval token="values_search">replace($dest_values$,",","\",\"")</eval>
+          </condition>
+          <condition match="match('click.name2', &quot;dc_users&quot;)">
+            <unset token="search_values2"></unset>
+            <set token="search_values">user</set>
+            <set token="user_values">$row.user$</set>
+            <eval token="user_values">replace(replace($user_values$,"\\\\","\\\\\\"),"\"","\\\"")</eval>
+            <eval token="values_search">replace($user_values$,",","\",\"")</eval>
+          </condition>
+          <condition match="match('click.name2', &quot;dc_bunit&quot;)">
+            <unset token="search_values2"></unset>
+            <set token="search_values">bunit</set>
+            <set token="bunit_values">$row.bunit$</set>
+          </condition>
+          <condition match="match('click.name2', &quot;threat_object&quot;)">
+            <set token="threat_object_full">$row.threat_object_full$</set>
+            <link target="_blank">/app/threat_object_fun/threat_object_prevalence?form.threat_object=$threat_object_full$&amp;form.time_picker.earliest=-7d&amp;form.time_picker.latest=now</link>
+          </condition>
+          <condition match="match('click.name2', &quot;dc_t_obj&quot;)">
+            <set token="threat_object_full">$row.threat_object_full$</set>
+            <link target="_blank">/app/threat_object_fun/threat_object_prevalence?form.threat_object=$threat_object_full$&amp;form.time_picker.earliest=-7d&amp;form.time_picker.latest=now</link>
+          </condition>
+          <condition>
+            <unset token="nothing"></unset>
+          </condition>
+        </drilldown>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel depends="$threat_token$">
+      <table>
+        <title>Prevalence by Source - related objects</title>
+        <search base="threat_object_sources">
+          <query>| search NOT threat_object IN ("$threat_token$") | sort 1000 + count | eval threat_object_full=threat_object | eval type=threat_object_type | eval threat_object=if(len(threat_object)&lt;50, threat_object, substr(threat_object,1,50)."...") | eventstats dc(threat_object_full) as dc_related_objects</query>
+          <progress>
+            <set token="related_count">$result.dc_related_objects$</set>
+          </progress>
+        </search>
+        <fields>threat_object type source count dc_r_obj dc_t_obj dc_src dc_dest dc_users dc_bunit risk_sum scores</fields>
+        <option name="dataOverlayMode">none</option>
+        <option name="drilldown">cell</option>
+        <option name="refresh.display">progressbar</option>
+        <format type="color" field="threat_object">
+          <colorPalette type="list">[#a7c4f2]</colorPalette>
+        </format>
+        <format type="color" field="dc_t_obj">
+          <colorPalette type="list">[#a7c4f2]</colorPalette>
+        </format>
+        <format type="color" field="dc_r_obj">
+          <colorPalette type="list">[#a7c4f2]</colorPalette>
+        </format>
+        <format type="color" field="dc_src">
+          <colorPalette type="list">[#a7c4f2]</colorPalette>
+        </format>
+        <format type="color" field="dc_dest">
+          <colorPalette type="list">[#a7c4f2]</colorPalette>
+        </format>
+        <format type="color" field="dc_users">
+          <colorPalette type="list">[#a7c4f2]</colorPalette>
+        </format>
+        <format type="color" field="dc_bunit">
+          <colorPalette type="list">[#a7c4f2]</colorPalette>
+        </format>
+        <drilldown>
+          <condition match="match('click.name2', &quot;dc_r_obj&quot;)">
+            <unset token="search_values"></unset>
+            <set token="search_values2">risk_object</set>
+            <set token="risk_values">$row.risk_object$</set>
+            <eval token="risk_values">replace(replace($risk_values$,"\\\\","\\\\\\"),"\"","\\\"")</eval>
+            <eval token="values_search">replace($risk_values$,",","\",\"")</eval>
+          </condition>
+          <condition match="match('click.name2', &quot;dc_src&quot;)">
+            <unset token="search_values2"></unset>
+            <set token="search_values">src</set>
+            <set token="src_values">$row.src$</set>
+            <eval token="src_values">replace(replace($src_values$,"\\\\","\\\\\\"),"\"","\\\"")</eval>
+            <eval token="values_search">replace($src_values$,",","\",\"")</eval>
+          </condition>
+          <condition match="match('click.name2', &quot;dc_dest&quot;)">
+            <unset token="search_values2"></unset>
+            <set token="search_values">dest</set>
+            <set token="dest_values">$row.dest$</set>
+            <eval token="dest_values">replace(replace($dest_values$,"\\\\","\\\\\\"),"\"","\\\"")</eval>
+            <eval token="values_search">replace($dest_values$,",","\",\"")</eval>
+          </condition>
+          <condition match="match('click.name2', &quot;dc_users&quot;)">
+            <unset token="search_values2"></unset>
+            <set token="search_values">user</set>
+            <set token="user_values">$row.user$</set>
+            <eval token="user_values">replace(replace($user_values$,"\\\\","\\\\\\"),"\"","\\\"")</eval>
+            <eval token="values_search">replace($user_values$,",","\",\"")</eval>
+          </condition>
+          <condition match="match('click.name2', &quot;dc_bunit&quot;)">
+            <unset token="search_values2"></unset>
+            <set token="search_values">bunit</set>
+            <set token="bunit_values">$row.bunit$</set>
+          </condition>
+          <condition match="match('click.name2', &quot;threat_object&quot;)">
+            <set token="threat_object_full">$row.threat_object_full$</set>
+            <link target="_blank">/app/threat_object_fun/threat_object_prevalence?form.threat_object=$threat_object_full$&amp;form.time_picker.earliest=-7d&amp;form.time_picker.latest=now</link>
+          </condition>
+          <condition match="match('click.name2', &quot;dc_t_obj&quot;)">
+            <set token="threat_object_full">$row.threat_object_full$</set>
+            <link target="_blank">/app/threat_object_fun/threat_object_prevalence?form.threat_object=$threat_object_full$&amp;form.time_picker.earliest=-7d&amp;form.time_picker.latest=now</link>
+          </condition>
+          <condition>
+            <unset token="nothing"></unset>
+          </condition>
+        </drilldown>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel depends="$risk_drilldown$">
+      <table>
+        <search>
+          <query>
+  | rest splunk_server=local count=0 /services/saved/searches 
+  | search title="$risk_drilldown$" | rename dispatch.earliest_time as early_time qualifiedSearch as search_spl
+  | table description search_spl early_time
+  | eval search_spl = if(match(search_spl,"^(|\s)(tstats|from).*"),"|".search_spl,search_spl)
+          </query>
+          <done>
+            <set token="search_spl">$result.search_spl$</set>
+            <set token="early_time">$result.early_time$</set>
+          </done>
+        </search>
+        <format type="color" field="search_spl">
+          <colorPalette type="list">[#a7c4f2]</colorPalette>
+        </format>
+        <drilldown>
+          <condition match="match('click.name2', &quot;search_spl&quot;)">
+            <link target="_blank">search?q=$search_spl$&amp;earliest=$early_time$&amp;latest=$time_picker.latest$</link>
+          </condition>
+          <condition>
+            <unset token="risk_drilldown"></unset>
+          </condition>
+        </drilldown>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <table>
+        <title>Score Contribution</title>
+        <search>
+          <query>| tstats summariesonly=false sum(All_Risk.calculated_risk_score) as risk_score,dc(All_Risk.risk_object) as risk_objects,count from datamodel=Risk.All_Risk where All_Risk.threat_object IN("$threat_token$") All_Risk.risk_object_type="*" (All_Risk.risk_object="*" OR risk_object="*") by source | sort 1000 - count,risk_score</query>
+          <earliest>$time_picker.earliest$</earliest>
+          <latest>$time_picker.latest$</latest>
+        </search>
+        <option name="drilldown">cell</option>
+        <option name="refresh.display">progressbar</option>
+        <format type="color" field="risk_score">
+          <colorPalette type="minMidMax" maxColor="#e34a33" midColor="#fdbb84" minColor="#fee8c8"></colorPalette>
+          <scale type="minMidMax" maxType="number" maxValue="1000" midType="number" midValue="500" minType="number" minValue="0"></scale>
+        </format>
+        <format type="color" field="source">
+          <colorPalette type="list">[#a7c4f2]</colorPalette>
+        </format>
+        <drilldown>
+          <condition match="match('click.name2', &quot;source&quot;)">
+            <set token="risk_drilldown">$click.value$</set>
+          </condition>  
+          <condition>
+            <unset token="risk_drilldown"></unset>
+          </condition>
+        </drilldown>
+      </table>
+    </panel>
+  </row>
+</form>

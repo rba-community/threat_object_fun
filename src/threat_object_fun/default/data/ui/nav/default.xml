@@ -1,0 +1,8 @@
+<nav search_view="search">
+  <view name="threat_object_overview" default='true' />
+  <view name="threat_object_detail" />
+  <view name="threat_object_soar" />
+  <view name="threat_object_content_dev" />
+  <view name="search" />
+  <view name="dashboards" />
+</nav>

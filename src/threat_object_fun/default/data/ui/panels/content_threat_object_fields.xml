@@ -1,0 +1,46 @@
+<panel>
+  <title>Suggested Threat Object Types</title>
+  <html>
+    <p>These are suggested threat object types based on threat intel fields and potential SOAR fields.</p>
+<div align="center">
+<table style="width: 100%">
+  <tr>
+    <td>certificate_common_name</td>
+    <td>domain</td>
+    <td>process</td>
+    <td>registry_value_name</td>
+  </tr>
+  <tr>
+    <td>certificate_organization</td>
+    <td>email</td>
+    <td>process_name</td>
+    <td>registry_value_text</td>
+  </tr>
+  <tr>
+    <td>certificate_serial</td>
+    <td>email_subject</td>
+    <td>parent_process</td>
+    <td>registry_value_text</td>
+  </tr>
+  <tr>
+    <td>certificate_unit</td>
+    <td>file_hash</td>
+    <td>parent_process_name</td>
+    <td>service</td>
+  </tr>
+  <tr>
+    <td>command</td>
+    <td>file_name</td>
+    <td>process_hash</td>
+    <td>url</td>
+  </tr>
+  <tr>
+    <td></td>
+    <td>http_user_agent</td>
+    <td>registry_path</td>
+    <td></td>
+  </tr>
+</table>
+</div>
+  </html>
+</panel>
