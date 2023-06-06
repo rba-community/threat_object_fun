@@ -3,6 +3,7 @@
 [![Splunkbase App](https://img.shields.io/badge/Splunkbase-threat__object__fun-blue)](https://splunkbase.splunk.com/app/6917)
 [![Splunk ES Compatibility](https://img.shields.io/badge/Splunk%20ES%20Compatibility->=6.6.0-success)](https://splunkbase.splunk.com/app/263)
 ![Splunk Cloud Compatibility](https://img.shields.io/badge/Splunk%20Cloud%20Ready-Victoria%20|%20Classic-informational?logo=splunk)
+[![Splunk Appinspect](https://github.com/rba-community/threat_object_fun/actions/workflows/appinspect.yml/badge.svg)](https://github.com/rba-community/threat_object_fun/actions/workflows/appinspect.yml)
 
 This app helps illustrate setting and leveraging threat objects with [Risk-Based Alerting (RBA)](https://www.splunk.com/en_us/form/the-essential-guide-to-risk-based-alerting.html).
 
